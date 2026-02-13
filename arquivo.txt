@@ -1,27 +1,6 @@
-carga inicial
-
-branch -- dev
-
-alteração 3 --- de
+const soma = ()=>{
 
 
-altercao 4 --- desenv
 
 
-alteração 5 --- desenv
-
-
-alteração 6 ---- desenv
-
-
-alteração 7 -- desenv
-
-
-alteração 8 -- desenv
-
-
-alteração 9 -- desenv
-
-alteração 10 -- desenv
-
-alteração 11 -- desenv
+}
