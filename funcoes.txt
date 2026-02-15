@@ -1,0 +1,1944 @@
+unit Funcoes;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Menus, ExtCtrls, Db, DBTables, DBCtrls, Registry, WinProcs, StdCtrls, Printers, Bde, ComCtrls,
+  Qrctrls, QuickRpt, QRPrntr, SqlExpr,DBClient;
+
+
+function ValorNulo (Campo, CampoFoco: TDBEdit): Boolean;
+function ValorNuloMask (Campo, CampoFoco: TDBEdit; Mask: String): Boolean;
+
+function RefreshTable (Tabela: ttable): Boolean;
+function RefreshTable1 (Tabela1: tclientdataset): Boolean;
+
+function EncryptMsg (Msg1: string; EncryptNo: integer): string;
+function DecryptMsg (Msg1: string; DecryptNo: integer): string;
+
+function Reverse (S: string): string;
+
+function SerialHD(Drive: String): String;
+
+function Integridade(Tabela: TTable): Boolean;
+
+function BooleanToInt(Value: Boolean): Integer;
+
+function AbreCombo(Combo: TComboBox): Boolean;
+function PopulaCombo(QryPopula: TQuery; Combo: TCombobox; Select, Campo: String): Boolean;
+function FechaCombo(Combo: TComboBox): Boolean;
+
+function VerificaData (Valor_Date: String): Boolean;
+function ExtInvData(VarData: TDate): String;
+function ExtData(VarData: TDate): String;
+
+function ExtValor(Valor: Real): Integer;
+
+function Cabecalho(Pagina: Integer; var ArqImp: TextFile; NomeEmp, TitRel, ModoImp: String): Boolean;
+
+function AbreTable (Tabela: TTable): Boolean;
+function FechaTable (Tabela: TTable): Boolean;
+function AbreSQL (SQL: TQuery): Boolean;
+function InsereDados (Tabela: TTable; CampoFoco : TField):Boolean;
+function CancelDados (Tabela: TTable; CampoFoco : TField):Boolean;
+function EditDados (Tabela: TTable; CampoFoco : TField):Boolean;
+function ExcluiDados (Tabela: TTable; CampoFoco: TField; Mensagem: String):Boolean;
+function VerificaChave (Tabela: TTable; CampoChave_01, CampoChave_02,
+                        CampoFoco: TField; Mensagem{, DBName, Nome, Chave}: String
+                       ): Boolean;
+function VerificaTabelaVazia(QryBusca: TsqlQuery; Select, Where: String): Boolean;
+function InsertDados(QryInsert: TsqlQuery; Select, Campos, Values: String): Boolean;
+function PostDados (Tabela: TTable; CampoFoco : TField):Boolean;
+function BuscaRegistro(QryBusca: TsqlQuery; Select, Where: String): Boolean;
+function UpdateDados(QryUpdate: TsqlQuery; Select, SetCampos, Where: String): Boolean;
+function DeleteDados(QryDelete: TQuery; Select, Where: String): Boolean;
+function ConsisteDelete (SQLConsiste: TQuery; DBName, Tabela, Campo_01,
+                         Campo_02, Mensagem: String): Boolean;
+function ErroSQL(Erro: EDBEngineError; Mensagem: String): Boolean;
+
+function StrZero(Valor: Integer; TamanhoRet: Integer): String;
+function Zeros(Texto: String; TamanhoRet: Integer): String;
+
+function Replicar(Caracter: Char; TamanhoRepl: Integer): String;
+
+function Centrar(Texto: String; TamanhoRet: Integer): String;
+function LeftSpace(Texto: String; TamanhoRet: Integer): String;
+function RightSpace(Text: String; TamanhoRet: Integer): String;
+function Space(Tamanho: Integer): String;
+
+function DecifraEmp(Texto: String): String;
+function FormataCEP(Texto: String): String;
+function FormataCPF(Texto: String): String;
+function FormataCGC(Texto: String): String;
+function FormataFone(Texto: String): String;
+function DataFinal(Inicio: TDate; TotalMeses: Integer): String;
+function FormataPlaca(Texto: String): String;
+
+function Possibilidades(Texto: String; Caso1: String; Caso2: String; Caso3: String; Caso4: String;
+         Caso5: String; Retorno1: String; Retorno2: String; Retorno3: String; Retorno4: String; Retorno5: String): String;
+function PathAlias(sAlias: String): String;
+function ConvFloat(Valor: String): Real;
+function BuscaMax(QryMax: TsqlQuery; Select, Where: String): Integer;
+function BuscaSelecao(QrySelecao: TQuery; Select, Where, Order: String): Boolean;
+function Soma(QrySoma: TQuery; Select, Where: String): Boolean;
+function RSS00005(Dado : string) : boolean;  // Valida CPF
+function RSS00004(Dado : string) : boolean;  // Valida CGC
+//***
+//***  Novas funções
+//***
+function MDRegistry(LSvouf : String; NTFDnovapath: String) : String;
+function StrToPChar(const Str: string): PChar;
+function CopiaTabela(TabFonte, TabDestino:String):Boolean;
+function AdicionaAlias(NomeAlias, Caminho, Driver : String):Boolean;
+function RemoveAlias(NomeAlias : String):Boolean;
+function MudaPathAlias(const Alias, Path, Fechatabela : String):Boolean;
+function ManipulaForm(nomform : TForm; Tnomform : TFormClass; comando : integer = 1; esquerda : integer = 0; altura : integer = 108; largura : integer = 468; tamanho : integer = 800; capt: string = ''):boolean;
+function ManipulaTabela(comando, alias : string; tabela : TTable): boolean;
+function Login(fuser, fentradaH, fentradaD, flogcod : TField; tabela : TTable):boolean;
+function Criacodigo(campocodigo, tamanho : string; tabela : TTable):string;
+function ComponenteToString(Component: TComponent): string;
+function StringToComponente(Value: string): TComponent;
+function Checalog(user, senha, privl, privlcheck : string):boolean;
+//function Logout(tmsaida, user, datsaida : TField; tabela : TTable):boolean;
+function Logout1(tmsaida, user, datsaida : TField; tabela1 : tclientdataset):boolean;
+function RemDir(Dir : String):boolean;
+function ManipulaRelat(nomform : TForm; Tnomform : TFormClass; Relat : TQuickRep; Preview : TQRPreview; comando : integer = 1; capt: string = ''):boolean;
+
+
+const
+  vCtrlPrtNormal     = #18;
+  vCtrlPrtCondensa   = #15;
+  vCtrlPrtExpande    = #14;
+  vCtrlPrtDesExpande = #20;
+  vCtrlPrtNegrita    = #27+'E';
+  vCtrlPrtDesNegrita = #27+'F';
+  vCtrlPrtMeiaPag    = #27+'C'+'0'+'5.5';
+  vCtrlPrtUmaPag     = #27+'C'+'0'+'11';
+
+implementation
+uses Inicializacao, Folha002, FMDPrincipal;
+
+
+// Função que verifica se o campo está vazio ou não
+function ValorNulo (Campo, CampoFoco: TDBEdit): Boolean;
+begin
+  if Campo.Text = '' then
+    begin
+      MessageDlg('Preenchimento do campo é obrigatório.', mtInformation, [mbOK], 0);
+      CampoFoco.SetFocus;
+      Result := False;
+      Exit;
+    end;
+end;
+
+// Função que verifica se o campo está vazio ou não de acordo com a mascara
+function ValorNuloMask (Campo, CampoFoco: TDBEdit; Mask: String): Boolean;
+begin
+  if Campo.Text = Mask then
+    begin
+      MessageDlg('Campo não é válido.', mtInformation, [mbOK], 0);
+      CampoFoco.SetFocus;
+      Result := False;
+      Exit;
+    end;
+end;
+
+// Função que abre tabelas
+function AbreTable (Tabela: TTable): Boolean;
+begin
+  try
+    begin
+      with Tabela do
+        begin
+          Open;
+        end;
+    end;
+  except
+    begin
+      MessageDlg('Ocorreu um erro ao tentar abrir o Banco de Dados.', mtError, [mbOK], 0);
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+// Função para fechar tabela
+function FechaTable (Tabela: TTable): Boolean;
+begin
+  try
+    begin
+      with Tabela do
+        begin
+          Close;
+        end;
+    end;
+  except
+    begin
+      MessageDlg('Ocorreu um erro ao tentar fechar o Banco de Dados.', mtError, [mbOK], 0);
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+// Função para atualizar tabela
+function RefreshTable (Tabela: TTable): Boolean;
+begin
+  try
+    begin
+      with Tabela do
+        begin
+          Refresh;
+        end;
+    end;
+  except
+    begin
+      MessageDlg('Ocorreu um erro ao tentar atualizar o Banco de Dados.', mtError, [mbOK], 0);
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+
+function RefreshTable1 (Tabela1: tclientdataset): Boolean;
+begin
+  try
+    begin
+      with Tabela1 do
+        begin
+          Refresh;
+        end;
+    end;
+  except
+    begin
+      MessageDlg('Ocorreu um erro ao tentar atualizar o Banco de Dados.', mtError, [mbOK], 0);
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+
+
+
+// Função que abre SQLs e executa
+function AbreSQL (SQL: TQuery): Boolean;
+begin
+  try
+    begin
+      with SQL do
+        begin
+          Close;
+          ExecSQL;
+          Open;
+        end;
+    end;
+  except
+    begin
+      MessageDlg('Ocorreu um erro ao tentar abrir a SQL.', mtError, [mbOK], 0);
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+// Função que insere dados na tabela e envia o foco
+function InsereDados (Tabela: TTable; CampoFoco : TField):Boolean;
+begin
+  try
+    begin
+      with Tabela do
+        begin
+          Insert;
+          CampoFoco.FocusControl;
+        end;
+    end;
+  except
+    begin
+      MessageDlg('Ocorreu um erro ao tentar incluir novo registro.', mtError, [mbOK], 0);
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+// Função para cancelar edições
+function CancelDados (Tabela: TTable; CampoFoco : TField):Boolean;
+begin
+  try
+    begin
+      with Tabela do
+        begin
+          Cancel;
+          CampoFoco.FocusControl;
+        end;
+    end;
+  except
+    begin
+      MessageDlg('Ocorreu um erro ao tentar cancelar as alterações no Banco de Dados.', mtError, [mbOK], 0);
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+// Função que modifica dados na tabela e envia o foco
+function EditDados (Tabela: TTable; CampoFoco : TField):Boolean;
+begin
+  try
+    begin
+      with Tabela do
+        begin
+          Edit;
+          CampoFoco.FocusControl;
+        end;
+    end;
+  except
+    begin
+      MessageDlg('Ocorreu um erro ao tentar modificar o registro.', mtError, [mbOK], 0);
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+// Função faz consistencias antes de excluir
+function ConsisteDelete (SQLConsiste: TQuery; DBName, Tabela, Campo_01,
+                         Campo_02, Mensagem: String): Boolean;
+begin
+  SQLConsiste.DatabaseName:= DBName;
+  with SQLConsiste do
+    begin
+      if Campo_01 = '' then
+        Exit
+      else
+      begin
+        Close;
+        SQL.Clear;
+        SQL.Add('Select * From ' + Tabela);
+        SQL.Add('Where ');
+        SQL.Add(Campo_01 + ' = ' + Campo_02);
+        ExecSQL;
+        Open;
+      end;
+      if RecordCount <> 0 then
+        begin
+          MessageDlg(Mensagem, mtInformation, [mbOK], 0);
+          Result := False;
+          Exit
+        end;
+    end;
+  Result := True;
+end;
+
+// Função que exclui dados na tabela e envia o foco
+function ExcluiDados (Tabela: TTable; CampoFoco: TField; Mensagem: String):Boolean;
+begin
+  if Tabela.RecordCount = 0 then
+    begin
+      MessageDlg('Não existe mais registros para serem excluídos !', mtInformation, [mbOk], 0);
+      Exit;
+    end
+  else
+    begin
+      try
+        if MessageDlg(Mensagem, mtInformation, [mbYes, mbNo], 0) = mrYes then
+          begin
+            with Tabela do
+              begin
+                Delete;
+                CampoFoco.FocusControl;
+              end;
+          end;
+      except
+        begin
+          MessageDlg('Ocorreu um erro ao tentar excluir o registro.', mtError, [mbOK], 0);
+          Result := False;
+          Exit;
+        end;
+      end;
+    end;
+end;
+
+// Função que verifica se existe o registro
+function VerificaChave (Tabela: TTable; CampoChave_01, CampoChave_02,
+                        CampoFoco: TField; Mensagem{, DBName, Nome, Chave}: String
+                       ): Boolean;
+begin
+{  Tabela.DatabaseName := DBName;
+  Tabela.TableName := Nome;
+  Tabela.IndexFieldNames := Chave;}
+  with Tabela do
+    begin
+      Open;
+      SetKey;
+      CampoChave_01.Value := CampoChave_02.Value;
+      if GotoKey then
+        begin
+          MessageDlg(Mensagem, mtInformation, [mbOk], 0);
+          CampoFoco.FocusControl;
+          Result := False;
+          Exit;
+        end;
+    end;
+end;
+
+// Função que salva os dados na tabela e envia o foco
+function PostDados (Tabela: TTable; CampoFoco : TField):Boolean;
+begin
+  try
+    begin
+        begin
+          with Tabela do
+            begin
+              Post;
+              CampoFoco.FocusControl
+            end;
+        end;
+    end;
+  except
+    on E: EDatabaseError do
+      begin
+        MessageDlg(E.Message + '.', mtError, [mbOK], 0);
+        Result := False;
+        Exit;
+      end;
+  end;
+end;
+
+function VerificaData (Valor_Date: String): Boolean;
+var
+  Data: TDateTime;
+begin
+  try
+    begin
+      Data := StrToDate(Valor_Date);
+    end;
+  except
+    begin
+      MessageDlg('Data inválida.', mtInformation, [mbOk], 0);
+      Result := False;
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+// Função para criptografia de valores
+function EncryptMsg (Msg1: string; EncryptNo: integer): string;
+var
+  ResultStr: string;
+  Temp: char;
+  I, EncryptIndex: integer;
+begin
+  ResultStr := '';
+  Temp := ' ';
+  for I := 1 to length(Msg1) do
+    begin
+      for EncryptIndex := 1 to EncryptNo do
+        begin
+          Temp := Succ (Msg1[I]);
+          Msg1[I] := Temp;
+        end;
+      ResultStr := ResultStr + Temp;
+    end;
+  EncryptMsg := ResultStr;
+end;
+
+// Função de descripitografia de valores
+function DecryptMsg (Msg1: string; DecryptNo: integer): string;
+var
+  ResultStr: string;
+  Temp: char;
+  I, DecryptIndex: integer;
+begin
+  ResultStr := '';
+  Temp := ' ';
+  for I := 1 to length(Msg1) do
+    begin
+      for DecryptIndex := 1 to DecryptNo do
+        begin
+          Temp := Pred (Msg1[I]);
+          Msg1[I] := Temp;
+        end;
+      ResultStr := ResultStr + Temp;
+    end;
+  DecryptMsg := ResultStr;
+end;
+
+// Função que reverte as Strings
+function Reverse (S: string): string;
+var
+  Temp: string;
+  I: integer;
+begin
+  Temp := '';
+  for I := Length (S) downto 1 do
+    Temp := Temp + S[I];
+  Reverse := Temp;
+end;
+
+// Verifica o numero de Serie do HD
+function SerialHD(Drive: String): String;
+var
+  Serial: DWord;
+  DirLen, Flags: DWord;
+  DLabel: Array[0..11] of Char;
+begin
+  try
+    GetVolumeInformation(PChar(Drive + '\'), DLabel, 12, @Serial, DirLen, Flags, nil, 0);
+    Result := IntToHex(Serial, 8);
+  except
+    Result := '';
+  end;
+end;
+
+// Faz a Integridade dos dados na hora da deleção do registro Mestre
+function Integridade(Tabela: TTable): Boolean;
+begin
+  with Tabela do
+    begin
+      First;
+      while not EOF do
+        begin
+          Delete;
+          Next;
+        end;
+    end;
+end;
+
+// Converte valores Booleanos em Inteiros
+function BooleanToInt(Value: Boolean): Integer;
+begin
+  if Value = True then
+    Result := 0;
+
+  if Value = False then
+    Result := 1;
+end;
+
+// Função para abertura da combobox automática
+function AbreCombo(Combo: TComboBox): Boolean;
+begin
+  SendMessage(Combo.Handle, CB_SHOWDROPDOWN, Integer(True), 0);
+end;
+
+// Função para fechar a combobox automática
+function FechaCombo(Combo: TComboBox): Boolean;
+begin
+  SendMessage(Combo.Handle, CB_SHOWDROPDOWN, Integer(False), 0);
+end;
+
+// Função para Colocar zeros à esquerda de valores
+function StrZero(Valor: Integer; TamanhoRet: Integer): String;
+var
+  VarStr  : String;
+  TamanhoStr: Integer;
+begin
+  VarStr := Trim(IntToStr(Valor));
+  TamanhoStr := Length(VarStr);
+  if TamanhoStr >= 0 then
+    begin
+      for TamanhoRet := 1 to TamanhoRet - TamanhoStr do
+        VarStr := '0' + VarStr;
+    end;
+  StrZero := VarStr;
+end;
+
+function Centrar(Texto: String; TamanhoRet: Integer): String;
+var
+  TamanhoVar : Integer;
+  Espacos    : Integer;
+begin
+  TamanhoVar:= Length(Texto);
+  if TamanhoVar >= 0 then
+    begin       //Centraliza o conteudo de uma variavel string
+       if TamanhoRet >= TamanhoVar then
+          begin
+            Espacos := Trunc((TamanhoRet / 2)-(TamanhoVar/2));
+            Texto := Space(Espacos) + Texto + Space(TamanhoRet-(Espacos+TamanhoVar));
+//            Texto := Space(Espacos) + Texto + Space((TamanhoRet-(Espacos*2))+Espacos);
+          end
+       else
+          begin //trunca a variável
+              Texto := copy(Texto,1,TamanhoRet);
+          end;
+    end;
+  Centrar := Texto;
+end;
+
+
+// Função para espaços a direita
+function RightSpace(Text: String; TamanhoRet: Integer): String;
+var
+  TamanhoStr: Integer;
+begin
+  TamanhoStr := Length(Text);
+  if TamanhoStr >= 0 then
+    begin     //trunca a variável
+      if TamanhoStr >= TamanhoRet then
+        Text := Copy(Text,1,TamanhoRet)
+      else
+        begin //adiciona espaços à direita da variável
+          for TamanhoRet := 1 to TamanhoRet - TamanhoStr do
+            Text := Text + ' ';
+        end;
+    end;
+  RightSpace := Text;
+end;
+
+// Função para adicionar espaços
+function Space(Tamanho: Integer): String;
+var
+   Contador : integer;
+   Texto    : string;
+begin
+   begin
+      for Contador := 1 to Tamanho do
+         Texto := Texto + ' ';
+   end;
+   Space := Texto;
+end;
+
+
+// Função para replicar um caracter x vezes
+function Replicar(Caracter: Char; TamanhoRepl: Integer): String;
+var
+   Contador : integer;
+   Texto    : string;
+begin
+   begin
+      for Contador := 1 to TamanhoRepl do
+         Texto := Texto + Caracter;
+   end;
+   Replicar := Texto;
+end;
+
+// Função para adicionar espaços à esquerda de uma string
+function LeftSpace(Texto: String; TamanhoRet: Integer): String;
+var
+  TamanhoVar: Integer;
+begin
+  TamanhoVar:= Length(Texto);
+  if TamanhoVar >= 0 then
+    begin       //adiciona espaços à esquerda da variável
+       if TamanhoRet >= TamanhoVar then
+          begin
+            for TamanhoRet := 1 to TamanhoRet - TamanhoVar do
+              Texto := ' ' + Texto;
+          end
+       else
+          begin //trunca a variável
+              Texto := copy(Texto,1,TamanhoRet);
+          end;
+    end;
+  LeftSpace := Texto;
+end;
+
+// Função para Extrair as baras e Inverter a data e retornar uma String
+function ExtInvData(VarData: TDate): String;
+var
+  Text : String;
+begin
+  if VarData = StrToDate('30/12/1899') then
+    ExtInvData := '          '
+  else
+    begin
+      Text := DateToStr(VarData);
+      ExtInvData := Copy(Text, 7, 4) + Copy(Text, 4, 2) + Copy(Text, 1, 2);
+    end;
+end;
+
+// Função para extrair da data e retornar uma String
+function ExtData(VarData: TDate): String;
+var
+  Text : String;
+begin
+  Text := DateToStr(VarData);
+  ExtData := Copy(Text, 1, 2) + Copy(Text, 4, 2) + Copy(Text, 7, 4);
+end;
+
+// Função para extrair o valor em Real e retornar um Inteiro
+function ExtValor(Valor: Real): Integer;
+var
+  Text : String;
+  Tamanho : Integer;
+begin
+  Text := FloatToStr(Valor);
+  Text := FormatCurr('0.00',Valor);
+  Tamanho := Length(Text);
+  Tamanho := Length(Text) - 3;
+  ExtValor := StrToInt(Copy(Text, 1, Tamanho) + Copy(Text, Tamanho + 2 , 2));
+end;
+
+// Função para imprimir o cabecalho
+function Cabecalho(Pagina: Integer; var ArqImp: TextFile; NomeEmp, TitRel, ModoImp: String): Boolean;
+const
+  vCtrlPrtNormal   = #18;
+  vCtrlPrtCondensa = #15;
+var
+  Tracos  : Integer;
+begin
+// fazer mudanças para ajustar ao relatório
+  if ModoImp = 'N' then
+    begin
+      Writeln(ArqImp, vCtrlPrtNormal);
+      Tracos := 80;
+    end
+  else
+    begin
+      Writeln(ArqImp, vCtrlPrtNormal+vCtrlPrtCondensa);
+      Tracos := 132;
+    end;
+//  Writeln(ArqImp, '');
+//  Writeln(ArqImp, '');
+  Writeln(ArqImp, Replicar('-', Tracos));
+  Writeln(ArqImp, RightSpace(NomeEmp, Tracos - 19) + DateTimeToStr(Now));
+  Writeln(ArqImp, RightSpace(TitRel, Tracos - 7) + 'Pag.: ' + IntToStr(Pagina));
+  Writeln(ArqImp, Replicar('-', Tracos));
+end;
+
+// Função para buscar os dados de uma tabela via SQL
+function BuscaRegistro(QryBusca: TsqlQuery; Select, Where: String): Boolean;
+begin
+  try
+    Screen.Cursor := crHourGlass;
+    with QryBusca do
+      begin
+        Close;
+        SQL.Clear;
+        {Parte fixa da query}
+        SQL.Add(Select);
+        {Parte variável da query}
+        SQL.Add(Where);
+        {Tenta executar a query montada anteriormente}
+        try
+          Open;
+          if RecordCount = 0 then
+            begin
+//              MessageDlg('Não foi possível encontrar nenhum registro com esses parâmetros!', mtInformation, [mbOK], 0);
+              Result := False;
+              Exit;
+            end
+          else
+            begin
+              Result := True;
+            end;
+        except
+          on E: EDataBaseError do
+            begin
+              MessageDlg('Ocorreu o seguinte erro durante a consulta ao banco de dados: ' +
+              CHR(10) + '"' + E.Message + '".', mtError, [mbOk], 0);
+              Result := False;
+            end;
+        end;
+      end;
+  finally
+  end;
+end;
+
+// Função para verificar Tabela vazia
+function VerificaTabelaVazia(QryBusca: TsqlQuery; Select, Where: String): Boolean;
+begin
+  BuscaRegistro(QryBusca, Select, Where);
+  if QryBusca.RecordCount < 1 then
+    Result := True
+  else
+    Result := False;
+end;
+
+// Função para popular uma combobox
+function PopulaCombo(QryPopula: TQuery; Combo: TCombobox; Select, Campo: String): Boolean;
+begin
+  with QryPopula do
+    begin
+      Close;
+      SQL.Clear;
+      SQL.Add(Select);
+      Open;
+      First;
+      Combo.Items.Clear;
+      while not Eof do
+        begin
+          Combo.Items.Add(FieldByName(Campo).AsString);
+          Next;
+        end;
+    end;
+end;
+
+// Função para adicionar novos registros na tabela
+function InsertDados(QryInsert: TsqlQuery; Select, Campos, Values: String): Boolean;
+begin
+  try
+    Screen.Cursor := crHourGlass;
+    try
+      with QryInsert Do
+      begin
+        Close;
+        SQL.Clear;
+        SQL.Add(Select);
+        SQL.Add('( ' + Campos + ')');
+        SQL.Add('Values ' + '( ' + Values + ')');
+        Result := True;
+      end;
+    except
+      on E: EDBEngineError do
+      begin
+        if not ErroSQL(E, 'Registro já incluído !') then
+        begin
+          MessageDlg('Ocorreu o seguinte erro durante a gravação no banco de dados: ' +
+          CHR(10) + '"' + E.Message + '".', mtError, [mbOk], 0);
+          Result := False;
+        end;
+      end;
+      on E: EDataBaseError do
+      begin
+        MessageDlg('Ocorreu o seguinte erro durante a gravação no banco de dados: ' +
+        CHR(10) + '"' + E.Message + '".', mtError, [mbOk], 0);
+        Result := False;
+      end;
+      on E: exception do
+      begin
+        Application.ShowException(E);
+        Result := False;
+      end;
+    end;
+  finally
+  end;
+end;
+
+// Função para atualizar os dados da tabela
+function UpdateDados(QryUpdate: TsqlQuery; Select, SetCampos, Where: String): Boolean;
+begin
+  try
+    try
+      with QryUpdate do
+      begin
+        Close;
+        SQL.Clear;
+        SQL.Add(Select);
+        SQL.Add('Set ' + SetCampos);
+        SQL.Add('Where ' + Where);
+        //Prepare;
+        Result := True;
+      end;
+    except
+      on E: EDataBaseError do
+      begin
+        MessageDlg('Ocorreu o seguinte erro durante a gravação no banco de dados: ' +
+        CHR(10) + '"' + E.Message + '".', mtError, [mbOk], 0);
+        Result := False;
+      end;
+    end;
+  finally
+  end;
+end;
+
+// Função para atualiar os dados da tabela
+function DeleteDados(QryDelete: TQuery; Select, Where: String): Boolean;
+begin
+  try
+    Screen.Cursor := crHourGlass;
+    try
+      begin
+        with QryDelete do
+          begin
+            Close;
+            SQL.Clear;
+            SQL.Add(Select);
+            SQL.Add(Where);
+//            Prepare;
+            ExecSql;
+            Result := True;
+          end;
+      end;
+    except
+      on E: EDataBaseError do
+      begin
+        MessageDlg('Ocorreu o seguinte erro durante a gravação no banco de dados: ' +
+        CHR(10) + '"' + E.Message + '".', mtError, [mbOk], 0);
+        Result := False;
+      end;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+function ErroSQL(Erro: EDBEngineError; Mensagem: String): Boolean;
+var
+  CodErro  : Longint;
+begin
+   Result := False;
+   CodErro := Erro.Errors[Erro.Errorcount - 1].NativeError;
+   if CodErro = -803  then
+      begin
+        MessageDlg(Mensagem, mtInformation, [mbOk], 0);
+        Result := True;
+      end;
+end;
+
+// Função para Decifrar siglas de Empresa
+function DecifraEmp(Texto: String): String;
+begin
+  Texto := UpperCase(Trim(Texto));
+  if Texto = 'FEB' then
+    Texto := '     FEB - FIAT FACTORING FOMENTO     '
+  else
+    if Texto = 'FES' then
+      Texto := '     FES - FIAT SERVICOS TECNICOS     '
+  else
+    if Texto = 'FEP' then
+      Texto := '         FEP - BANCO FIAT S/A         '
+  else
+    if Texto = 'LSG' then
+      Texto := '        LSG - FIAT LEASING S/A        '
+  else
+    if Texto = 'SAC' then
+      Texto := ' SAC - FIAT ADMINISTRADORA CONSORCIOS '
+  else
+    if Texto = 'ROT' then
+      Texto := 'ROT - FIAT ROTATIVOS S/A';
+  DecifraEmp := Texto;
+end;
+
+// Função para Formatar PLACA
+function FormataPlaca(Texto: String): String;
+begin
+  FormataPlaca := RightSpace(Copy(Texto,1,3)+'-'+Copy(Texto,4,4),8)
+end;
+
+// Função para Formatar FONE
+function FormataFone(Texto: String): String;
+var
+  TamanhoStr: Integer;
+  TamanhoRet: Integer;
+begin
+  Texto := Trim(Texto);
+  TamanhoStr := Length(Texto);
+  if TamanhoStr < 13 then
+    for TamanhoRet := 1 to 13 - TamanhoStr do
+      Texto := '0' + Texto;
+  FormataFone := '('+Copy(Texto,4,2)+') '+Copy(Texto,6,4)+'-'+Copy(Texto,10,4);
+end;
+
+// Função para Formatar CEP
+function FormataCEP(Texto: String): String;
+var
+  TamanhoStr: Integer;
+  TamanhoRet: Integer;
+begin
+  Texto := Trim(Texto);
+  TamanhoStr := Length(Texto);
+  if TamanhoStr < 8 then
+    for TamanhoRet := 1 to 8 - TamanhoStr do
+      Texto := '0' + Texto;
+  FormataCEP := Copy(Texto,1,2)+'.'+Copy(Texto,3,3)+'-'+Copy(Texto,6,3);
+end;
+
+// Função para Formatar CPF
+function FormataCPF(Texto: String): String;
+var
+  TamanhoStr: Integer;
+  TamanhoRet: Integer;
+begin
+  Texto := Trim(Texto);
+  TamanhoStr := Length(Texto);
+  if TamanhoStr < 14 then
+    for TamanhoRet := 1 to 14 - TamanhoStr do
+      Texto := '0' + Texto;
+  FormataCPF := Copy(Texto,4,3)+'.'+Copy(Texto,7,3)+'.'+Copy(Texto,10,3)+'-'+Copy(Texto,13,2);
+  Texto := Texto;
+end;
+
+// Função para Formatar CGC
+function FormataCGC(Texto: String): String;
+var
+  TamanhoStr: Integer;
+  TamanhoRet: Integer;
+begin
+  Texto := Trim(Texto);
+  TamanhoStr := Length(Texto);
+  if TamanhoStr < 14 then
+    for TamanhoRet := 1 to 14 - TamanhoStr do
+      Texto := '0' + Texto;
+  FormataCGC := Copy(Texto,1,2)+'.'+Copy(Texto,3,3)+'.'+Copy(Texto,6,3)+'/'+Copy(Texto,9,4)+'-'+Copy(Texto,13,2);
+  Texto := Texto;
+end;
+
+// Função para adicionar x meses em uma data
+function DataFinal(Inicio: TDate; TotalMeses: Integer): String;
+var
+ Dia, Mes, Ano : Integer;
+begin
+  Dia := StrToInt(Copy(DateToStr(Inicio),1,2));
+  Mes := StrToInt(Copy(DateToStr(Inicio),4,2));
+  Ano := StrToInt(Copy(DateToStr(Inicio),7,4));
+  while TotalMeses > 0 do
+    begin
+      if Mes < 12 then
+        begin
+          Mes := Mes + 1;
+          TotalMeses := TotalMeses -1;
+        end
+      else
+        begin
+          Mes := 1;
+          TotalMeses := TotalMeses -1;
+          Ano := Ano + 1;
+        end;
+    end;
+  DataFinal := StrZero(Dia,2)+'/'+StrZero(Mes,2)+'/'+IntToStr(Ano);
+end;
+
+// Função para Colocar zeros à esquerda de strings
+function Zeros(Texto: String; TamanhoRet: Integer): String;
+var
+  TamanhoStr: Integer;
+begin
+  Texto := Trim(Texto);
+  TamanhoStr := Length(Texto);
+  if TamanhoStr >= 0 then
+    begin
+      for TamanhoRet := 1 to TamanhoRet - TamanhoStr do
+        Texto := '0' + Texto;
+    end;
+  Zeros := Texto;
+end;
+
+function Possibilidades(Texto: String; Caso1: String; Caso2: String; Caso3: String; Caso4: String;
+        Caso5: String; Retorno1: String; Retorno2: String; Retorno3: String; Retorno4: String; Retorno5: String): String;
+begin
+  if (Texto <> Caso1) then
+    if (Texto <> Caso2) then
+      if (Texto <> Caso3) then
+        if (Texto <> Caso4) then
+          if (Texto <> Caso5) then
+            Texto := 'Erro!'
+          else
+            Texto := Retorno5
+        else
+          Texto := Retorno4
+      else
+        Texto := Retorno3
+    else
+      Texto := Retorno2
+  else
+      Texto := Retorno1;
+  Possibilidades := Texto;
+end;
+
+// Função para saber qual o diretorio da Alias
+function PathAlias(sAlias: String): String;
+var
+  Database : TDatabase;
+  sDir     : PChar;
+begin
+  try
+    Database := TDatabase.Create(nil);
+    with Database do
+      begin
+        sDir := StrAlloc(255);
+        AliasName := sAlias;
+        DatabaseName := 'TEMP';
+        Connected := True;
+        DbiGetDirectory(Handle, True, sDir);
+        PathAlias := StrPas(sDir);
+        Connected := False;
+      end;
+  finally
+    Database.Free;
+    StrDispose(sDir);
+  end;
+end;
+
+// Função para converter valores String para Real é testar se e um valor válido
+function ConvFloat(Valor: String): Real;
+var
+  Resultado : Real;
+begin
+  try
+    Resultado := StrToFloat(Valor);
+  except
+    on EConvertError do
+      begin
+        ConvFloat := 0.0;
+        Exit;
+      end;
+  end;
+  ConvFloat := Resultado;
+end;
+
+// Busca Código Máximo da tabela
+function BuscaMax(QryMax: TsqlQuery; Select, Where: String): Integer;
+var
+  vMax : Integer;
+begin
+  try
+    Screen.Cursor := crHourGlass;
+    with QryMax do
+      begin
+        Close;
+        SQL.Clear;
+        {Parte fixa da query}
+        SQL.Add(Select);
+        {Parte variável da query}
+        SQL.Add(Where);
+        {Tenta executar a query montada anteriormente}
+        try
+          begin
+            Open;
+            vMax := Fields[0].AsInteger;
+            BuscaMax := vMax;
+          end;
+        except
+          on E: EDataBaseError do
+            begin
+              MessageDlg('Ocorreu o seguinte erro durante a consulta ao banco de dados: ' +
+              CHR(10) + '"' + E.Message + '".', mtError, [mbOk], 0);
+              BuscaMax := vMax;
+            end;
+        end;
+      end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+// Função para seleciona os registro com parametros
+function BuscaSelecao(QrySelecao: TQuery; Select, Where, Order: String): Boolean;
+begin
+  try
+    Screen.Cursor := crHourGlass;
+    try
+      with QrySelecao do
+      begin
+        Close;
+        SQL.Clear;
+        SQL.Add(Select);
+        SQL.Add('Where ' + Where);
+        SQL.Add('Order By ' + Order);
+//        Prepare;
+        Result := True;
+      end;
+    except
+      on E: EDataBaseError do
+      begin
+        MessageDlg('Ocorreu o seguinte erro durante a gravação no banco de dados: ' +
+        CHR(10) + '"' + E.Message + '".', mtError, [mbOk], 0);
+        Result := False;
+      end;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+// Função para somar os campos da tabela
+function Soma(QrySoma: TQuery; Select, Where: String): Boolean;
+begin
+  try
+    Screen.Cursor := crHourGlass;
+    try
+      with QrySoma do
+      begin
+        Close;
+        SQL.Clear;
+        SQL.Add(Select);
+        SQL.Add('Where ' + Where);
+        Result := True;
+      end;
+    except
+      on E: EDataBaseError do
+      begin
+        MessageDlg('Ocorreu o seguinte erro durante a gravação no banco de dados: ' +
+        CHR(10) + '"' + E.Message + '".', mtError, [mbOk], 0);
+        Result := False;
+      end;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+{ Esta rotina deverá ser incluída neste ponto
+  Obs: o comprimento do campo CPF deverá ser de 14 digitos,
+  pois temos que considerar os pontos "   .   .   -  "}
+
+function RSS00005(Dado : string) : boolean;
+var  D1            : array[1..9] of byte;
+     I, DF1, DF2, DF3, DF4, DF5, DF6, Resto1, Resto2,PDigito, SDigito : integer;
+begin
+     Result := true;
+     if Length(Dado) = 11
+     then
+     begin
+          for I := 1 to 9 do
+               if Dado[I] in ['0'..'9'] then
+                    D1[I] := StrToInt(Dado[I])
+               else
+                    Result := false;
+          if Result
+          then
+          begin
+               DF1 := 0; DF2 := 0; DF3 := 0; DF4 := 0; DF5 := 0; DF6 := 0; Resto1 := 0; Resto2 := 0;
+               PDigito := 0;
+               SDigito := 0;
+               DF1 := 10*D1[1] + 9*D1[2] + 8*D1[3] + 7*D1[4] + 6*D1[5] + 5*D1[6] +
+                      4*D1[7] + 3*D1[8] + 2*D1[9];
+               DF2 := DF1 div 11;
+               DF3 := DF2 * 11;
+               Resto1 := DF1 - DF3;
+               if (Resto1 = 0) or (Resto1 = 1)
+               then
+                    PDigito := 0
+               else
+                    PDigito := 11 - Resto1;
+               DF4 := 11*D1[1] + 10*D1[2] + 9*D1[3] + 8*D1[4] + 7*D1[5] + 6*D1[6] +
+                      5*D1[7] + 4*D1[8] + 3*D1[9] + 2*PDigito;
+               DF5 := DF4 div 11;
+               DF6 := DF5 * 11;
+               Resto2 := DF4 - DF6;
+               if (Resto2 = 0) or (Resto2 = 1)
+               then
+                    SDigito := 0
+               else
+                    SDigito := 11 - Resto2;
+               if (PDigito <> StrToInt(Dado[10])) or  (SDigito <> StrToInt(Dado[11])) then
+                    Result := false;
+          end;
+     end
+     else
+          if Length(Dado) <> 0 then
+               Result := false;
+end; {TESTA_CPF}
+
+{ Esta rotina deverá ser incluída dentro da Implementation
+  Obs: o comprimento do campo CGC deverá ser de 18 digitos,
+  pois temos que considerar os pontos "  .   .   /    -  "}
+
+{Valida dígitos verificadores de CGC}
+function RSS00004(Dado : string) : boolean;
+var  D1            : array[1..12] of byte;
+     I, DF1, DF2, DF3, DF4, DF5, DF6, Resto1, Resto2, PDigito, SDigito : integer;
+begin
+     Result := true;
+     if Length(Dado) = 14
+     then
+     begin
+          for I := 1 to 12 do
+               if Dado[I] in ['0'..'9'] then
+                    D1[I] := StrToInt(Dado[I])
+               else
+                    Result := false;
+               if Result
+               then
+                   begin
+                        DF1 := 0; DF2 := 0; DF3 := 0; DF4 := 0; DF5 := 0; DF6 := 0;
+                        Resto1 := 0; Resto2 := 0; PDigito := 0; SDigito := 0;
+                        DF1 := 5*D1[1] + 4*D1[2] + 3*D1[3] + 2*D1[4] + 9*D1[5] + 8*D1[6] +
+                        7*D1[7] + 6*D1[8] + 5*D1[9] + 4*D1[10] + 3*D1[11] + 2*D1[12];
+                        DF2 := DF1 div 11;
+                        DF3 := DF2 * 11;
+                        Resto1 := DF1 - DF3;
+                        if (Resto1 = 0) or (Resto1 = 1)
+                        then
+                            PDigito := 0
+                        else
+                            PDigito := 11 - Resto1;
+                            DF4 := 6*D1[1] + 5*D1[2] + 4*D1[3] + 3*D1[4] + 2*D1[5] + 9*D1[6] +
+                            8*D1[7] + 7*D1[8] + 6*D1[9] + 5*D1[10] + 4*D1[11] + 3*D1[12] +
+                            2*PDigito;
+                            DF5 := DF4 div 11;
+                            DF6 := DF5 * 11;
+                            Resto2 := DF4 - DF6;
+                            if (Resto2 = 0) or (Resto2 = 1)
+                            then
+                                SDigito := 0
+                            else
+                                SDigito := 11 - Resto2;
+                                if (PDigito <> StrToInt(Dado[13])) or (SDigito <> StrToInt(Dado[14]))
+                                then
+                                    Result := false;
+                   end;
+     end
+     else
+         if Length(Dado) <> 0
+         then
+             Result := false;
+end; {TESTA_CGC}
+
+
+function MDRegistry(LSvouf : String; NTFDnovapath: String) : String;
+var
+  Reg : TRegistry;
+  LocalShare, NetFile : String;
+  i : Integer;
+begin
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_LOCAL_MACHINE;
+    Reg.OpenKey('\Software\Borland\Database Engine\Settings\SYSTEM\INIT', False);
+    Reg.WriteString('LOCAL SHARE', LSvouf);
+  finally
+    Reg.Free;
+  end;
+{  if ( NTFDnovapath <> '' ) then begin
+   Session.NetFileDir := NTFDnovapath;
+  end;}
+end;
+
+function StrToPChar(const Str: string): PChar;
+{Converte String em Pchar}
+type
+  TRingIndex = 0..7;
+var
+  Ring: array[TRingIndex] of PChar;
+  RingIndex: TRingIndex;
+  Ptr: PChar;
+begin
+  Ptr := @Str[Length(Str)];
+  Inc(Ptr);
+  if Ptr^ = #0 then
+     begin
+     Result := @Str[1];
+     end
+  else
+     begin
+     Result := StrAlloc(Length(Str)+1);
+     RingIndex := (RingIndex + 1) mod (High(TRingIndex) + 1);
+     StrPCopy(Result,Str);
+     StrDispose(Ring[RingIndex]);
+     Ring[RingIndex]:= Result;
+     end;
+end;
+
+function CopiaTabela(TabFonte, TabDestino:String):Boolean;
+var
+ Tabela : TDatabase;
+begin
+  if not FileExists(TabFonte) then
+    raise Exception.Create('Tabela fonte inexistente');
+  DBIInit(nil);
+  Tabela := TDataBase.Create(nil);
+  with Tabela do begin
+   connected := False;
+   Params.Add('path = '+ExtractFilePath(TabFonte));
+   DatabaseName := 'CopyPdxTable';
+   DriverName := 'STANDARD';
+   Connected := True;
+  end;
+   DBICopyTable(Tabela.Handle,True,PChar(TabFonte), nil, PChar(TabDestino));
+   Tabela.Free;
+   DBIExit;
+   Result := True;
+end;
+
+function AdicionaAlias(NomeAlias, Caminho, Driver : String):Boolean;
+begin
+  DBIInit(nil);
+  DBIAddAlias(nil, PChar(NomeAlias), PChar(Driver), PChar('PATH:' + Caminho), True);
+  DBIExit;
+end;
+
+function RemoveAlias(NomeAlias : String):Boolean;
+begin
+  DBIInit(nil);
+  DBIDeleteAlias(nil, PChar(NomeAlias));
+  DBIExit;
+end;
+
+function MudaPathAlias(const Alias, Path, Fechatabela : String):Boolean;
+var
+  AliasParams: TStringList;
+  i : Integer;
+begin
+ // Seta o modo de configuração para alterar todos selecionados
+  Session.ConfigMode := cmAll;
+  if ( Fechatabela = '1' ) or ( Fechatabela = 'S' ) then begin
+   for i := 0 to Application.ComponentCount -1 do begin
+    if (Application.Components[i] is TDataSet ) then //Tdataset = TTable, TQuery, TStoredProcedure, etc...
+     (Application.Components[i] as TDataSet ).Close;
+   end;
+   With Session do
+   for i := 0 to DataBaseCount do begin
+    DataBases[0].Close;
+    Session.CloseDatabase(DataBases[0]);
+   end;
+  end;
+  AliasParams := TStringList.Create;
+  if not Session.IsAlias(Alias) then begin
+   try
+     AliasParams.Add('PATH='+Path);
+     Session.AddAlias(Alias,'PARADOX',AliasParams);
+     Session.SaveConfigFile;
+   finally
+  if ( Fechatabela = '1' ) or ( Fechatabela = 'S' ) then begin
+   for i := 0 to Application.ComponentCount -1 do begin
+    if (Application.Components[i] is TDataSet ) then //Tdataset = TTable, TQuery, TStoredProcedure, etc...
+     (Application.Components[i] as TDataSet ).Open;
+   end;
+   With Session do
+   for i := 0 to DataBaseCount do begin
+    DataBases[0].Open;
+ //   Session.OpenDatabase(DataBases[0]);
+   end;
+  end;
+     AliasParams.Free;
+   end;
+  end
+  else if Session.IsAlias(Alias) then begin
+   try
+     Session.GetAliasParams(Alias,AliasParams);
+     AliasParams.Clear;
+     AliasParams.Add('PATH='+Path);
+     Session.ModifyAlias(Alias,AliasParams);
+     Session.SaveConfigFile;
+   finally
+  if ( Fechatabela = '1' ) or ( Fechatabela = 'S' ) then begin
+   for i := 0 to Application.ComponentCount -1 do begin
+    if (Application.Components[i] is TDataSet ) then //Tdataset = TTable, TQuery, TStoredProcedure, etc...
+     (Application.Components[i] as TDataSet ).Open;
+   end;
+   With Session do
+   for i := 0 to DataBaseCount do begin
+    DataBases[0].Open;
+   end;
+  end;
+     AliasParams.Free;
+     Result := True;
+   end;
+  end;
+end;
+
+function ManipulaForm(nomform : TForm; Tnomform : TFormClass; comando : integer = 1; esquerda : integer = 0; altura : integer = 108; largura : integer = 468; tamanho : integer = 800; capt: string = ''):boolean;
+begin
+   if ( comando = 1 ) then begin
+     try
+        with nomform do begin
+            if nomform = nil then begin
+               Application.CreateForm(Tnomform, nomform);
+               nomform.Left := esquerda;
+               nomform.Top := altura;
+               nomform.Height := largura;
+               nomform.Width := tamanho;
+               nomform.Caption := capt;
+               Screen.Cursor := crDefault;
+               ShowModal;
+               Free;
+               Result := True;
+               Exit;
+            end else
+               nomform.Left := esquerda;
+               nomform.Top := altura;
+               nomform.Height := largura;
+               nomform.Width := tamanho;
+               nomform.Caption := capt;
+               Screen.Cursor := crDefault;
+               ShowModal;
+               Free;
+               Result := True;
+               Exit;
+            end;
+     except begin
+         MessageDlg('Ocorreu um erro ao tentar abrir o formulario.', mtError, [mbOK], 0);
+         Screen.Cursor := crDefault;
+         Result := False;
+         Exit;
+     end;
+   end;
+  end;
+  if ( comando = 2 ) then begin
+     try
+        with nomform do begin
+            if nomform = nil then begin
+               Application.CreateForm(Tnomform, nomform);
+               //QuickRep1.Preview;
+               nomform.Caption := capt;
+               Screen.Cursor := crDefault;
+               //Free;
+               Result := True;
+               Exit;
+            end else
+               //QuickRep1.Preview;
+               nomform.Caption := capt;
+               Screen.Cursor := crDefault;
+               //Free;
+               Result := True;
+               Exit;
+            end;
+     except begin
+         MessageDlg('Ocorreu um erro ao tentar abrir o formulario.', mtError, [mbOK], 0);
+         Screen.Cursor := crDefault;
+         Result := False;
+         Exit;
+     end;
+   end;
+  end;
+    if ( comando = 3 ) then begin
+     try
+        with nomform do begin
+            if nomform = nil then begin
+               Application.CreateForm(Tnomform, nomform);
+              // QRPreview1.QRPrinter := TQRPrinter(Sender);
+               Screen.Cursor := crDefault;
+               ShowModal;
+               Free;
+               Result := True;
+               Exit;
+            end else
+              // QRPreview1.QRPrinter := TQRPrinter(Sender);
+               Screen.Cursor := crDefault;
+               ShowModal;
+               Free;
+               Result := True;
+               Exit;
+            end;
+     except begin
+         MessageDlg('Ocorreu um erro ao tentar abrir o formulario.', mtError, [mbOK], 0);
+         Screen.Cursor := crDefault;
+         Result := False;
+         Exit;
+     end;
+   end;
+  end;
+end;
+
+function ManipulaTabela(comando, alias : string; tabela : TTable):boolean;
+var
+ TBDesc : CRTblDesc;
+ hDb : hDbiDb;
+ TablePath : array [0..dbiMaxPathLen] of char;
+begin
+  if ( comando = 'abrir' ) or ( comando = 'Abrir' ) or ( comando = '1' ) then begin
+    try
+     begin
+       with tabela do begin
+            Close;
+            DatabaseName := 'FOLHA'+alias;
+            Open;
+            Result := true;
+            Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao tentar abrir o Banco de Dados.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'fechar' ) or ( comando = 'Fechar' ) or ( comando = '2' ) then begin
+    try
+     begin
+       with tabela do begin
+           Close;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao tentar fechar o Banco de Dados.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'primeiro' ) or ( comando = 'Primeiro' ) or ( comando = '3' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+           Cancel;
+           First;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao tentar encontrar o inicio do Banco de Dados.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'ultimo' ) or ( comando = 'Ultimo' ) or ( comando = '4' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+           Cancel;
+           Last;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao tentar encontrar o final do Banco de Dados.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'anterior' ) or ( comando = 'Anterior' ) or ( comando = '5' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+           Cancel;
+           Prior;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao passar para o registro anterior.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'proximo' ) or ( comando = 'Proximo' ) or ( comando = '6' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+           Cancel;
+           Next;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao mudar de registro.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'inserir' ) or ( comando = 'Inserir' ) or ( comando = '7' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+           Cancel;
+           Insert;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao iserir registro.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'editar' ) or ( comando = 'Editar' ) or ( comando = '8' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+           Cancel;
+           Edit;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao editar registro.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'excluir' ) or ( comando = 'Excluir' ) or ( comando = '9' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+           Delete;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao excluir registro.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'atualizar' ) or ( comando = 'Atualizar' ) or ( comando = '10' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+           Cancel;
+           Refresh;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao atualizar Banco de Dados.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'salvar' ) or ( comando = 'Salvar' ) or ( comando = '11' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+           Post;
+           Result := true;
+           Exit;
+         end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao tentar salvar registro.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+  else if ( comando = 'pack' ) or ( comando = 'Pack' ) or ( comando = '12' ) then begin
+    try
+     begin
+       with tabela do
+         begin
+  FillChar(TBDesc,Sizeof(TBDesc),0);
+  with TBDesc do begin
+    StrPCopy(szTblName,Tabela.TableName);
+    StrPCopy(szTblType,szParadox);
+    bPack := True;
+  end;
+  Tabela.Open;
+  hDb := nil;
+  Check(DbiGetDirectory(Tabela.DBHandle, True, TablePath));
+  Tabela.Close;
+  Check(DbiOpenDatabase(nil, 'STANDARD', dbiReadWrite,
+    dbiOpenExcl,nil,0, nil, nil, hDb));
+  Check(DbiSetDirectory(hDb, TablePath));
+  Check(DBIDoRestructure(hDb,1,@TBDesc,nil,nil,
+    nil,False));
+  end;
+     end;
+    except
+     begin
+       MessageDlg('Ocorreu um erro ao tentar abrir o Banco de Dados.', mtError, [mbOK], 0);
+       Result := False;
+       Exit;
+     end;
+   end;
+  end
+end;
+
+function Login(fuser, fentradaH, fentradaD, flogcod : TField; tabela : TTable):boolean;
+begin
+     try begin
+       with tabela do begin
+         Insert;
+         fentradaH.Text := vespHoraLog;
+         fentradaD.Value := vespDataLog;
+         fuser.Text := vespUsuario;
+         Logcodigo := flogcod.AsInteger;
+         Post;
+         Refresh;
+         Result := true;
+         Exit;
+       end;
+      end;
+      except  begin
+        MessageDlg('Ocorreu um erro ao efetuar o Log-in no aplicativo.', mtError, [mbOK], 0);
+        Result := False;
+        Exit;
+      end;
+     end;
+        Result := true;
+        Exit;
+end;
+
+function Criacodigo(campocodigo, tamanho : string; tabela : TTable):string;
+begin
+//
+end;
+
+function ComponenteToString(Component: TComponent): string;
+var
+  BinStream:TMemoryStream;
+  StrStream: TStringStream;
+  s: string;
+begin
+  BinStream := TMemoryStream.Create;
+  try
+    StrStream := TStringStream.Create(s);
+    try
+      BinStream.WriteComponent(Component);
+      BinStream.Seek(0, soFromBeginning);
+      ObjectBinaryToText(BinStream, StrStream);
+      StrStream.Seek(0, soFromBeginning);
+      Result:= StrStream.DataString;
+    finally
+      StrStream.Free;
+    end;
+  finally
+    BinStream.Free
+  end;
+end;
+
+function StringToComponente(Value: string): TComponent;
+var
+  StrStream:TStringStream;
+  BinStream: TMemoryStream;
+begin
+  StrStream := TStringStream.Create(Value);
+  try
+    BinStream := TMemoryStream.Create;
+    try
+      ObjectTextToBinary(StrStream, BinStream);
+      BinStream.Seek(0, soFromBeginning);
+      Result := BinStream.ReadComponent(nil);
+    finally
+      BinStream.Free;
+    end;
+  finally
+    StrStream.Free;
+  end;
+end;
+
+function Checalog(user, senha, privl, privlcheck : string):boolean;
+begin
+  if ( privlcheck <> '' ) then begin
+    if ( StrToInt(privl) <= strToInt(privlcheck) )then begin
+      Result := true;
+      Exit;
+    end
+    else if ( StrToInt(privl) > strToInt(privlcheck) )then begin
+      MessageDlg('Você não tem permissão para executar esta operação!!!', mtInformation,[mbOk],0);
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+function Logout1(tmsaida, user, datsaida : TField; tabela1 : tclientdataset):boolean;
+begin
+     vespHoraLog := Copy(DateTimeToStr(now),12,8);
+     try begin
+       with tabela1 do begin
+         tabela1.FindKey([Logcodigo]);
+         Edit;
+         user.Text := vespUsuario;
+         datsaida.Value := Date;
+         tmsaida.Text := vespHoraLog;
+         Post;
+         Refresh;
+         Result := true;
+         Exit;
+       end;
+     end;
+     except  begin
+        MessageDlg('Ocorreu um erro ao efetuar o Log-out no aplicativo.', mtError, [mbOK], 0);
+        Result := False;
+        Exit;
+     end;
+   end;
+end;
+
+function RemDir(Dir : String):boolean;
+var
+  S      : TSearchRec;
+  existe : Integer;
+begin
+    Existe := FindFirst(Dir+'\*.*', faAnyfile, S);
+    while ( Existe = 0 ) do begin
+    if (S.Name <> '.') and (S.Name <> '..') and (S.Attr = faDirectory) then begin
+      RemDir(Dir+'\'+S.Name);
+      RMDir(Dir+'\'+S.Name);
+    end else
+      DeleteFile(StrToPchar(Dir+'\'+S.Name));
+      Existe := FindNext(S);
+    end;
+      FindClose(Existe);
+end;
+
+function ManipulaRelat(nomform : TForm; Tnomform : TFormClass; Relat : TQuickRep; Preview : TQRPreview; comando : integer = 1; capt: string = ''):boolean;
+begin
+  if ( comando = 1 ) then begin
+     try
+        with nomform do begin
+            if nomform = nil then begin
+               MessageDlg('Antes de criar o form',mtInFormation,[mbOk],0);
+               Application.CreateForm(Tnomform, nomform);
+               MessageDlg('Antes do Preview',mtInFormation,[mbOk],0);
+               Relat.Preview;
+               MessageDlg('Passou do Preview',mtInFormation,[mbOk],0);
+            //   nomform.Caption := capt;
+            //   Screen.Cursor := crDefault;
+               Free;
+               Result := True;
+               Exit;
+            end else
+               MessageDlg('Antes do Preview',mtInFormation,[mbOk],0);
+               Relat.Preview;
+             //  nomform.Caption := capt;
+            //   Screen.Cursor := crDefault;
+               Free;
+               Result := True;
+               Exit;
+            end;
+     except begin
+         MessageDlg('Ocorreu um erro ao tentar abrir o formulario.', mtError, [mbOK], 0);
+         Screen.Cursor := crDefault;
+         Result := False;
+         Exit;
+     end;
+   end;
+  end;
+  if ( comando = 2 ) then begin
+     try
+        with nomform do begin
+            if nomform = nil then begin
+               Application.CreateForm(Tnomform, nomform);
+               MessageDlg('Antes do Preview Sender',mtInFormation,[mbOk],0);
+              // Preview.QRPrinter := TQRPrinter(Sender);
+               Screen.Cursor := crDefault;
+               ShowModal;
+               Free;
+               Result := True;
+               Exit;
+            end else
+           //    Preview.QRPrinter := TQRPrinter(Sender);
+               Screen.Cursor := crDefault;
+               ShowModal;
+               Free;
+               Result := True;
+               Exit;
+            end;
+     except begin
+         MessageDlg('Ocorreu um erro ao tentar abrir o formulario.', mtError, [mbOK], 0);
+         Screen.Cursor := crDefault;
+         Result := False;
+         Exit;
+     end;
+   end;
+  end;
+end;
+
+end.
